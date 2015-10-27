@@ -14,19 +14,21 @@ using namespace std;
 #define NUM_RESOURCES 2
 
 struct Model { //these will need to become vectors
-	int as[2][2][NUM_RESOURCES];
-	int learns[2][2][NUM_RESOURCES];
-	int forgets[2][2][NUM_RESOURCES];
-	int pi_0[2];
-	int prior;
-	int guesses[NUM_SUBPARTS];
-	int slips[NUM_SUBPARTS];
+
+	double prior;
+	double learns[NUM_RESOURCES];
+	double forgets[NUM_RESOURCES];
+	double guesses[NUM_SUBPARTS];
+	double slips[NUM_SUBPARTS];
+	double as[2][2][NUM_RESOURCES];
+	double emissions[2][2][NUM_SUBPARTS];
+	double pi_0[2];
 };
 
 struct TrueModel { //also need to be vectors
 	int as[2][2][NUM_RESOURCES];
-	int learns[2][2][NUM_RESOURCES];
-	int forgets[2][2][NUM_RESOURCES];
+	int learns[NUM_RESOURCES];
+	int forgets[NUM_RESOURCES];
 	int pi_0[2];
 	int prior;
 	int guesses[NUM_SUBPARTS];
@@ -36,6 +38,12 @@ struct TrueModel { //also need to be vectors
 
 struct DataStruct {
 	//as defined in generate.synthetic_data
+	//look into how to implement <cstdint> as data lengths are specified there.
+	int stateseqs[5000]; //vectorize
+	int data[4][5000]; //vectorize
+	int starts[50]; //vectorize
+	int lengths[50]; //vectorize
+	int resources;
 };
 
 
@@ -43,11 +51,11 @@ struct DataStruct {
 DataStruct generate_synthetic_data(TrueModel model, int lengths[], int resources[])
 {
 	int resources;
-	int starts[2];
-	type statesques;
-	type data;
-	(data, statesques) = synthetic_data_helper(model, starts, lengths, resources);
-	//Note to self: figure out what syntheticdatahelper does - it's a c++ file.
+	int starts[2]; //vectorize
+	int stateseqs[5000]; //vectorize
+	int data[4][5000]; //vectorize
+	(data, statesques) = synthetic_data_helper(model, starts, lengths, resources); //translate to C
+	//Note to self: learn to parse mxFunctions, and analyze syntheticdatahelper.
 	DataStruct datastruct;
 	//Then we fill in the fields of DataStruct
 	return datastruct;
@@ -64,13 +72,15 @@ Model generate_random_model(int num_resources, int num_subparts, int trans_prior
 
 model M_step(int trans_softcount[][][], int emission_softcounts[][][], int init_softcounts[][])
 {
-	//STUFF HAPPENS
+	//lots of matlab functions happen here
+	//but it mostly seems to be formatting and element-by-element operations on arrays
+	//look into ensuring these stay optimized! Don't want to cost users efficiency.
 }
 
 pair<Model model, int log_likelihoods[]> EM_fit(Model model, DataStruct data, long tol = NULL, int maxiter = NULL)
 {
 	//define inputs that don't exist
-	//use util.data to make sure the data is good or something
+	//use util.data to make sure the data is valid
 	int num_subparts = size(data.data, 1); //translate from matlab
 	int num_resources = length(model.learns); //translate from matlab
 
